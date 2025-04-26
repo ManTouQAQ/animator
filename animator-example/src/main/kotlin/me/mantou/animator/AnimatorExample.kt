@@ -3,7 +3,6 @@ package me.mantou.animator
 import me.mantou.animator.render.ButtonRender
 import me.mantou.animator.shader.Shader
 import me.mantou.animator.util.Interpolators
-import org.joml.Matrix2f
 import org.joml.Matrix4f
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback

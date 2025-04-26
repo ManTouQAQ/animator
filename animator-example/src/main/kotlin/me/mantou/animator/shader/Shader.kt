@@ -4,7 +4,6 @@ import org.joml.Matrix4f
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL20C.*
 import org.lwjgl.opengl.GL32C.GL_GEOMETRY_SHADER
-import org.lwjgl.system.MemoryUtil
 import java.io.InputStream
 
 class Shader(
