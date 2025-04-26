@@ -1,11 +1,11 @@
 package me.mantou.animator
 
 class Animation(
-    private val durationMillis: Long,
+    val durationMillis: Long,
     private val onUpdate: (progress: Float) -> Unit,
-    private val interpolator: Interpolator = Interpolator { t -> t },
+    var interpolator: Interpolator = Interpolator { t -> t },
     private val onEnd: (() -> Unit)? = null,
-    private val repeatMode: RepeatMode = RepeatMode.RESTART,
+    var repeatMode: RepeatMode = RepeatMode.RESTART,
     private val repeatCount: Int = 0
 ) {
     enum class RepeatMode {

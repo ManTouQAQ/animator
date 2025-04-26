@@ -12,6 +12,9 @@ repositories {
 dependencies {
     implementation(project(":"))
     implementation("org.joml", "joml", "1.10.7")
+    implementation("io.github.spair:imgui-java-binding:1.89.0")
+    implementation("io.github.spair:imgui-java-lwjgl3:1.89.0")
+    implementation("io.github.spair:imgui-java-natives-windows:1.89.0")
 
     implementation(platform("org.lwjgl:lwjgl-bom:3.3.6"))
 
