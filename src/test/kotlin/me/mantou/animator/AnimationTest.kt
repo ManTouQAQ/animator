@@ -1,6 +1,5 @@
 package me.mantou.animator
 
-import org.junit.jupiter.api.assertThrows
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -53,8 +52,6 @@ class AnimationTest {
         animation.update(900L) // 10% + 90%
         assertEquals(1.0f, progressValues.last())
         assertTrue(endFlag)
-        assertFalse(animation.isRunning)
-        assertTrue(animation.isEnd)
     }
 
     @Test
@@ -84,8 +81,6 @@ class AnimationTest {
         animation.update(900L) // 10% + 90%
         assertEquals(1.0f, progressValues.last())
         assertTrue(endFlag)
-        assertFalse(animation.isRunning)
-        assertTrue(animation.isEnd)
     }
 
     @Test
@@ -135,7 +130,7 @@ class AnimationTest {
 
         animation.update(500L)
 
-        animation.update(200L, true)
+        animation.update(-200L)
         assertEquals(0.3f, progressValues.last())
 
         animation.update(200L)
@@ -160,29 +155,16 @@ class AnimationTest {
     }
 
     @Test
-    fun testEndedUpdateException() {
-        val animation = Animation(
-            1000L,
-            { _ -> }
-        )
-
-        animation.update(1100L)
-
-        assertThrows<IllegalStateException> {
-            animation.update(1000L)
-        }
-    }
-
-    @Test
     fun testEnd() {
+        var endFlag = 0
         var animation = Animation(
             1000L,
-            { _ -> }
+            { _ -> },
+            onEnd = { endFlag++ },
         )
 
         animation.update(1000L)
-
-        assertTrue(animation.isEnd)
+        assertTrue(animation.isEnd())
 
         animation = Animation(
             1000L,
@@ -191,9 +173,9 @@ class AnimationTest {
         )
 
         animation.update(1000L)
-        assertFalse(animation.isEnd)
+        assertFalse(animation.isEnd())
 
         animation.update(2000L)
-        assertTrue(animation.isEnd)
+        assertTrue(animation.isEnd())
     }
 }

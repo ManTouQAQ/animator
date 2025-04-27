@@ -22,25 +22,55 @@ class Animation(
         private set
     var isRunning = true
         private set
-    var isEnd = false
-        private set
 
-    fun update(deltaMillis: Long, rollback: Boolean = false) {
-        checkEnd()
+    private var endFlag = false
+    private var initFlag = false
 
+    fun update(deltaMillis: Long, ignoreBorder: Boolean = false) {
         if (!isRunning) return
 
-        elapsedMillis += deltaMillis * (if (rollback) -1 else 1)
+        updateTime(deltaMillis, ignoreBorder)
+    }
+
+    private fun updateTime(deltaMillis: Long, ignoreBorder: Boolean = false) {
+        var targetMillis = elapsedMillis + deltaMillis
+
+        if (targetMillis <= 0L) {
+            targetMillis = 0
+            if (!initFlag){
+                initFlag = true
+            }else if (!ignoreBorder) return
+        } else {
+            initFlag = false
+        }
+
+        if (repeatCount != INFINITE && targetMillis >= durationMillis * (repeatCount + 1)) {
+            if (!endFlag) {
+                endFlag = true
+                elapsedMillis = durationMillis * (repeatCount + 1)
+                endAnimation()
+                return
+            }else if (ignoreBorder) {
+                updateEndProgress()
+            }
+            return
+        } else {
+            endFlag = false
+        }
+
+        elapsedMillis = targetMillis
 
         updateProgress()
     }
 
     private fun endAnimation() {
-        isEnd = true
-        isRunning = false
+        updateEndProgress()
+        onEnd?.invoke()
+    }
+
+    private fun updateEndProgress() {
         val finalProgress = if (isReversed) 0f else 1f
         onUpdate(interpolator.interpolate(finalProgress))
-        onEnd?.invoke()
     }
 
     private fun updateProgress() {
@@ -49,21 +79,17 @@ class Animation(
                 val normalizedTime = ((elapsedMillis % durationMillis) + durationMillis) % durationMillis
                 normalizedTime / durationMillis.toFloat()
             }
+
             RepeatMode.REVERSE -> {
                 val cycle = elapsedMillis / durationMillis
                 val cycleTime = elapsedMillis % durationMillis
                 val shouldReverse = (cycle % 2 == 1L) xor isReversed
                 if (shouldReverse) {
                     1f - cycleTime.toFloat() / durationMillis.toFloat()
-                }else{
+                } else {
                     cycleTime.toFloat() / durationMillis.toFloat()
                 }
             }
-        }
-
-        if (repeatCount != INFINITE && elapsedMillis >= durationMillis * (repeatCount + 1)) {
-            endAnimation()
-            return
         }
 
         progress = progress.coerceIn(0f, 1f)
@@ -72,36 +98,29 @@ class Animation(
     }
 
     fun reverse() {
-        checkEnd()
         if (repeatMode != RepeatMode.REVERSE) throw IllegalArgumentException("RepeatMode must be REVERSE")
 
         isReversed = !isReversed
     }
 
     fun reset() {
-        checkEnd()
-
         elapsedMillis = 0L
         isReversed = false
     }
 
-    fun pause(){
-        checkEnd()
+    fun pause() {
         isRunning = false
     }
 
-    fun resume(){
-        checkEnd()
+    fun resume() {
         isRunning = true
     }
 
-    fun setTime(time: Long) {
-        checkEnd()
-        elapsedMillis = time
-        updateProgress()
+    fun setTime(time: Long, ignoreBorder: Boolean = false) {
+        updateTime(time - elapsedMillis, ignoreBorder)
     }
 
-    private fun checkEnd(){
-        if (isEnd) throw IllegalStateException("This animation is ended")
+    fun isEnd(): Boolean {
+        return endFlag
     }
 }

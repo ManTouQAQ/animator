@@ -4,10 +4,11 @@ import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
 import imgui.type.ImInt
+import me.mantou.animator.model.HoverButton
 import me.mantou.animator.render.ButtonRender
 import me.mantou.animator.shader.Shader
-import me.mantou.animator.util.AnimationUtils
 import me.mantou.animator.util.Interpolators
+import org.joml.Math
 import org.joml.Matrix4f
 import org.lwjgl.glfw.Callbacks
 import org.lwjgl.glfw.GLFW.*
@@ -16,40 +17,14 @@ import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL20C.glUseProgram
 import org.lwjgl.system.MemoryUtil.NULL
-import java.awt.Color
 
 private var window = -1L
 private lateinit var imGuiImplGlfw: ImGuiImplGlfw
 private lateinit var imGuiImplGl3: ImGuiImplGl3
 
 private val buttonRender = ButtonRender()
-
 private lateinit var buttonShader: Shader
-var buttonSize = 0f
-var buttonColor = Color(1f, 1f, 1f, 1f)
-val buttonAnimation = Animation(
-    1000L,
-    { p ->
-        buttonSize = p
-        buttonColor = AnimationUtils.lerpColor(
-            Color(1f, 1f, 1f, 1f),
-            Color(0f, 1f, 1f, 1f),
-            p
-        )
-    },
-    Interpolators.Linear,
-    repeatMode = Animation.RepeatMode.REVERSE,
-    repeatCount = Animation.INFINITE
-)
-
-private var selectedInterpolator = ImInt(0)
-private val interpolators = listOf(
-    "Linear" to Interpolators.Linear,
-    "Accelerate" to Interpolators.Accelerate,
-    "Decelerate" to Interpolators.Decelerate,
-    "Overshoot" to Interpolators.overshoot(1.5f),
-    "Elastic" to Interpolators.elastic()
-)
+private val button = HoverButton()
 
 private var lastFrameTime = 0.0
 private var deltaTime = 0.0f
@@ -67,19 +42,10 @@ fun main() {
         deltaTime = (currentTime - lastFrameTime).toFloat()
         lastFrameTime = currentTime
 
-        buttonAnimation.update((deltaTime * 1000).toLong())
-
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
-        buttonShader.use()
-        buttonShader.setMatrix4f("u_ModelMat", Matrix4f().scale(buttonSize, buttonSize, 1f))
-
-//        buttonColor = AnimationUtils.hsvColorCyclic(0.01f)
-        buttonShader.setVec3("u_Color", buttonColor.red / 255f, buttonColor.green / 255f, buttonColor.blue / 255f)
-
-        buttonRender.render()
-        glUseProgram(0)
+        renderButton()
 
         renderDebugGui()
 
@@ -88,6 +54,19 @@ fun main() {
     }
 
     destroy()
+}
+
+fun renderButton(){
+    button.update((deltaTime * 1000L).toLong())
+    buttonShader.use()
+    val model = Matrix4f().apply {
+        rotate(Math.toRadians(button.angle), 0f, 0f, 1f)
+        scale(button.size, button.size, 1f)
+    }
+    buttonShader.setMatrix4f("u_ModelMat", model)
+    buttonShader.setVec3("u_Color", button.color.red / 255f, button.color.green / 255f, button.color.blue / 255f)
+    buttonRender.render()
+    glUseProgram(0)
 }
 
 fun genShader(vert: String, frag: String): Shader{
@@ -147,6 +126,16 @@ fun destroy(){
     glfwTerminate()
 }
 
+private var selectedInterpolator = ImInt(0)
+private val interpolators = listOf(
+    "Linear" to Interpolators.Linear,
+    "Accelerate" to Interpolators.Accelerate,
+    "Decelerate" to Interpolators.Decelerate,
+    "Overshoot" to Interpolators.overshoot(1.5f),
+    "Elastic" to Interpolators.elastic(),
+    "SmoothStep" to Interpolators.SmoothStep,
+)
+
 fun renderDebugGui(){
     imGuiImplGlfw.newFrame()
     imGuiImplGl3.newFrame()
@@ -159,8 +148,22 @@ fun renderDebugGui(){
             selectedInterpolator,
             interpolatorNames,
             interpolatorNames.size
-    )) {
-        buttonAnimation.interpolator = interpolators[selectedInterpolator.get()].second
+        )) {
+        button.hoverAnimation.interpolator = interpolators[selectedInterpolator.get()].second
+    }
+
+    if (button.isHovering) {
+        if (ImGui.button("unhover")) {
+            button.isHovering = false
+        }
+    } else {
+        if (ImGui.button("hover")) {
+            button.isHovering = true
+        }
+    }
+
+    if (ImGui.checkbox("Rainbow", button.rainbow)) {
+        button.rainbow = !button.rainbow
     }
 
     ImGui.end()
