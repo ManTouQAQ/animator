@@ -143,30 +143,29 @@ fun renderDebugGui(){
     ImGui.begin("Debug")
 
     val interpolatorNames = interpolators.map { it.first }.toTypedArray()
-    if (ImGui.combo(
-            "Interpolator",
-            selectedInterpolator,
-            interpolatorNames,
-            interpolatorNames.size
-        )) {
+    ImGui.combo(
+        "Interpolator",
+        selectedInterpolator,
+        interpolatorNames,
+        interpolatorNames.size
+    ).onTrue {
         button.hoverAnimation.interpolator = interpolators[selectedInterpolator.get()].second
     }
 
-    if (button.isHovering) {
-        if (ImGui.button("unhover")) {
-            button.isHovering = false
-        }
-    } else {
-        if (ImGui.button("hover")) {
-            button.isHovering = true
-        }
+    ImGui.button(if (button.isHovering) "unhover" else "hover").onTrue {
+        button.isHovering = !button.isHovering
     }
 
-    if (ImGui.checkbox("Rainbow", button.rainbow)) {
+    ImGui.checkbox("Rainbow", button.rainbow).onTrue {
         button.rainbow = !button.rainbow
     }
 
     ImGui.end()
     ImGui.render()
     imGuiImplGl3.renderDrawData(ImGui.getDrawData())
+}
+
+fun Boolean.onTrue(action: () -> Unit): Boolean {
+    if (this) action()
+    return this
 }
