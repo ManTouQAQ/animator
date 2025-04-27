@@ -19,6 +19,10 @@ object Interpolators{
 
     val Reverse = Interpolator { t -> 1f - t }
 
+    val SmoothStep = Interpolator { t ->
+        t * t * (3f - 2f * t)
+    }
+
     fun cycle(cycles: Int): Interpolator {
         return Interpolator { t -> sin((2 * PI).toFloat() * t * cycles) }
     }
@@ -43,6 +47,12 @@ object Interpolators{
         return Interpolator { t ->
             val t1 = t - 1f
             t1 * t1 * ((tension + 1) * t1 + tension) + 1f
+        }
+    }
+
+    fun bezier(x1: Float, y1: Float, x2: Float, y2: Float): Interpolator {
+        return Interpolator { t ->
+            BezierUtil.cubicBezierSolve(t, x1, y1, x2, y2)
         }
     }
 }
