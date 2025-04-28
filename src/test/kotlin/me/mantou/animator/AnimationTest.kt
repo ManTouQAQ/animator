@@ -148,7 +148,7 @@ class AnimationTest {
 
         // 重置动画
         animation.reset()
-        assertTrue(animation.elapsedMillis == 0L)
+        assertTrue(animation.elapsedTime == 0L)
 
         animation.update(300L)
         assertEquals(0.3f, progressValues.last())

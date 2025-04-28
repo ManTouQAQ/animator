@@ -19,7 +19,7 @@ class HoverButton {
         set(value) {
             field = value
             if (!value) {
-                hoverAnimation.update(0, true)
+                hoverAnimation.updateForce()
             }
         }
 
@@ -27,13 +27,11 @@ class HoverButton {
         1000L,
         { p ->
             size = defaultSize + (p / 4)
-            if (!rainbow){
-                color = AnimationUtils.lerpColor(
-                    defaultColor,
-                    hoverColor,
-                    p
-                )
-            }
+            color = AnimationUtils.lerpColor(
+                defaultColor,
+                hoverColor,
+                p
+            )
             angle = AnimationUtils.lerp(defaultAngle, 180f, p)
             println("Progress: $p")
         },
@@ -42,10 +40,37 @@ class HoverButton {
         }
     )
 
+    val effectAnimations = mutableListOf<Animation>()
+
     fun update(deltaMillis: Long) {
         hoverAnimation.update(deltaMillis * if (isHovering) -1 else 1)
+
+        effectAnimations.removeIf {
+            it.update(deltaMillis)
+            it.isEnd()
+        }
+
         if (rainbow) {
             color = AnimationUtils.hsvColorCyclic(0.05f)
         }
+    }
+
+    fun click(){
+        val darkenColor = Color(
+            (color.red / 255f * 0.7f).coerceIn(0f, 1f),
+            (color.green / 255f * 0.7f).coerceIn(0f, 1f),
+            (color.blue / 255f * 0.7f).coerceIn(0f, 1f),
+            color.alpha / 255f
+        )
+
+        effectAnimations.add(Animation(
+            150L,
+            { p ->
+                hoverAnimation.updateForce()
+                color = AnimationUtils.lerpColor(color, darkenColor, p)
+            },
+            repeatMode = Animation.RepeatMode.REVERSE,
+            repeatCount = 1
+        ))
     }
 }

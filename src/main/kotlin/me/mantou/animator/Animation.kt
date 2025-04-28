@@ -1,7 +1,7 @@
 package me.mantou.animator
 
 class Animation(
-    val durationMillis: Long,
+    val durationTime: Long,
     private val onUpdate: (progress: Float) -> Unit,
     var interpolator: Interpolator = Interpolator { t -> t },
     private val onEnd: (() -> Unit)? = null,
@@ -16,7 +16,7 @@ class Animation(
         const val INFINITE = -1
     }
 
-    var elapsedMillis = 0L
+    var elapsedTime = 0L
         private set
     var isReversed = false
         private set
@@ -26,17 +26,21 @@ class Animation(
     private var endFlag = false
     private var initFlag = false
 
-    fun update(deltaMillis: Long, ignoreBorder: Boolean = false) {
+    fun update(deltaTime: Long, ignoreBorder: Boolean = false) {
         if (!isRunning) return
 
-        updateTime(deltaMillis, ignoreBorder)
+        updateTime(deltaTime, ignoreBorder)
     }
 
-    private fun updateTime(deltaMillis: Long, ignoreBorder: Boolean = false) {
-        var targetMillis = elapsedMillis + deltaMillis
+    fun updateForce(){
+        updateTime(0, true)
+    }
 
-        if (targetMillis <= 0L) {
-            targetMillis = 0
+    private fun updateTime(deltaTime: Long, ignoreBorder: Boolean = false) {
+        var targetTime = elapsedTime + deltaTime
+
+        if (targetTime <= 0L) {
+            targetTime = 0
             if (!initFlag){
                 initFlag = true
             }else if (!ignoreBorder) return
@@ -44,10 +48,10 @@ class Animation(
             initFlag = false
         }
 
-        if (repeatCount != INFINITE && targetMillis >= durationMillis * (repeatCount + 1)) {
+        if (repeatCount != INFINITE && targetTime >= durationTime * (repeatCount + 1)) {
             if (!endFlag) {
                 endFlag = true
-                elapsedMillis = durationMillis * (repeatCount + 1)
+                elapsedTime = durationTime * (repeatCount + 1)
                 endAnimation()
                 return
             }else if (ignoreBorder) {
@@ -58,7 +62,7 @@ class Animation(
             endFlag = false
         }
 
-        elapsedMillis = targetMillis
+        elapsedTime = targetTime
 
         updateProgress()
     }
@@ -69,25 +73,28 @@ class Animation(
     }
 
     private fun updateEndProgress() {
-        val finalProgress = if (isReversed) 0f else 1f
+        val cycle = elapsedTime / durationTime
+        val shouldReverse = (cycle % 2 == 0L) xor isReversed
+
+        val finalProgress = if (shouldReverse) 0f else 1f
         onUpdate(interpolator.interpolate(finalProgress))
     }
 
     private fun updateProgress() {
         var progress = when (repeatMode) {
             RepeatMode.RESTART -> {
-                val normalizedTime = ((elapsedMillis % durationMillis) + durationMillis) % durationMillis
-                normalizedTime / durationMillis.toFloat()
+                val normalizedTime = ((elapsedTime % durationTime) + durationTime) % durationTime
+                normalizedTime / durationTime.toFloat()
             }
 
             RepeatMode.REVERSE -> {
-                val cycle = elapsedMillis / durationMillis
-                val cycleTime = elapsedMillis % durationMillis
+                val cycle = elapsedTime / durationTime
+                val cycleTime = elapsedTime % durationTime
                 val shouldReverse = (cycle % 2 == 1L) xor isReversed
                 if (shouldReverse) {
-                    1f - cycleTime.toFloat() / durationMillis.toFloat()
+                    1f - cycleTime.toFloat() / durationTime.toFloat()
                 } else {
-                    cycleTime.toFloat() / durationMillis.toFloat()
+                    cycleTime.toFloat() / durationTime.toFloat()
                 }
             }
         }
@@ -104,7 +111,7 @@ class Animation(
     }
 
     fun reset() {
-        elapsedMillis = 0L
+        elapsedTime = 0L
         isReversed = false
     }
 
@@ -117,7 +124,7 @@ class Animation(
     }
 
     fun setTime(time: Long, ignoreBorder: Boolean = false) {
-        updateTime(time - elapsedMillis, ignoreBorder)
+        updateTime(time - elapsedTime, ignoreBorder)
     }
 
     fun isEnd(): Boolean {

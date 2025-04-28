@@ -142,6 +142,20 @@ fun renderDebugGui(){
     ImGui.newFrame()
     ImGui.begin("Debug")
 
+    ImGui.text("playing effects: ${button.effectAnimations.size}")
+
+    ImGui.button(if (button.isHovering) "unhover" else "hover").onTrue {
+        button.isHovering = !button.isHovering
+    }
+    ImGui.sameLine()
+    ImGui.button("click").onTrue {
+        button.click()
+    }
+
+    ImGui.checkbox("Rainbow", button.rainbow).onTrue {
+        button.rainbow = !button.rainbow
+    }
+
     val interpolatorNames = interpolators.map { it.first }.toTypedArray()
     ImGui.combo(
         "Interpolator",
@@ -150,14 +164,6 @@ fun renderDebugGui(){
         interpolatorNames.size
     ).onTrue {
         button.hoverAnimation.interpolator = interpolators[selectedInterpolator.get()].second
-    }
-
-    ImGui.button(if (button.isHovering) "unhover" else "hover").onTrue {
-        button.isHovering = !button.isHovering
-    }
-
-    ImGui.checkbox("Rainbow", button.rainbow).onTrue {
-        button.rainbow = !button.rainbow
     }
 
     ImGui.end()
