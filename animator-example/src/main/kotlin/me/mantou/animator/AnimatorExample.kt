@@ -165,11 +165,13 @@ fun renderDebugGui() {
     ImGui.sameLine()
     ImGui.text("size=%.2f, angle=%.2f°  ".format(button.currentProps.size, button.currentProps.angle))
 
-    ImGui.text("playing effects: ${button.effectAnimations.size}")
     ImGui.alignTextToFramePadding()
+    ImGui.text("playing effects: ${button.effectAnimations.size}")
 
+    ImGui.alignTextToFramePadding()
     ImGui.text("overlay colors: ${button.overlayColors.values
         .takeUnless { it.isEmpty() }?.joinToString { "[${it.toIntValueString()}]" } ?: "empty"}")
+
 //    ImGui.text("overlay colors:")
 //    button.overlayColors.values.takeUnless { it.isEmpty() }?.forEachIndexed { i, color ->
 //        ImGui.sameLine()
