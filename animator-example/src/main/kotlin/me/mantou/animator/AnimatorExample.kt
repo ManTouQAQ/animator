@@ -12,6 +12,7 @@ import me.mantou.animator.util.alphaFloat
 import me.mantou.animator.util.blueFloat
 import me.mantou.animator.util.greenFloat
 import me.mantou.animator.util.redFloat
+import me.mantou.animator.util.toIntValueString
 import org.joml.Math
 import org.joml.Matrix4f
 import org.lwjgl.glfw.Callbacks
@@ -162,24 +163,27 @@ fun renderDebugGui() {
         button.currentProps.color.alphaFloat()
     )
     ImGui.sameLine()
-    ImGui.text("size=%.2f, angle=%.2f°".format(button.currentProps.size, button.currentProps.angle))
+    ImGui.text("size=%.2f, angle=%.2f°  ".format(button.currentProps.size, button.currentProps.angle))
 
     ImGui.text("playing effects: ${button.effectAnimations.size}")
     ImGui.alignTextToFramePadding()
-    ImGui.text("overlay colors:")
-    button.overlayColors.values.takeUnless { it.isEmpty() }?.forEachIndexed { i, color ->
-        ImGui.sameLine()
-        ImGui.colorButton(
-            "##overlayColor#$i",
-            color.redFloat(),
-            color.greenFloat(),
-            color.blueFloat(),
-            color.alphaFloat()
-        )
-    } ?: run {
-        ImGui.sameLine()
-        ImGui.text("empty")
-    }
+
+    ImGui.text("overlay colors: ${button.overlayColors.values
+        .takeUnless { it.isEmpty() }?.joinToString { "[${it.toIntValueString()}]" } ?: "empty"}")
+//    ImGui.text("overlay colors:")
+//    button.overlayColors.values.takeUnless { it.isEmpty() }?.forEachIndexed { i, color ->
+//        ImGui.sameLine()
+//        ImGui.colorButton(
+//            "##overlayColor#$i",
+//            color.redFloat(),
+//            color.greenFloat(),
+//            color.blueFloat(),
+//            color.alphaFloat()
+//        )
+//    } ?: run {
+//        ImGui.sameLine()
+//        ImGui.text("empty")
+//    }
 
     ImGui.newLine()
     ImGui.separatorText("Action")
