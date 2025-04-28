@@ -12,7 +12,7 @@ data class ButtonProps(
     var color: Color = Color(1f, 1f, 1f, 1f)
 ) {
     override fun toString(): String {
-        return "size=$size, angle=$angle, color=[${color.toIntValueString()}]"
+        return "size=%.2f, angle=%.2f°, color=[${color.toIntValueString()}]".format(size, angle)
     }
 }
 

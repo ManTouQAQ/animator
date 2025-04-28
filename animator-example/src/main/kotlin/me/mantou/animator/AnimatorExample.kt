@@ -8,10 +8,10 @@ import me.mantou.animator.model.HoverButton
 import me.mantou.animator.render.ButtonRender
 import me.mantou.animator.shader.Shader
 import me.mantou.animator.util.Interpolators
+import me.mantou.animator.util.alphaFloat
 import me.mantou.animator.util.blueFloat
 import me.mantou.animator.util.greenFloat
 import me.mantou.animator.util.redFloat
-import me.mantou.animator.util.toIntValueString
 import org.joml.Math
 import org.joml.Matrix4f
 import org.lwjgl.glfw.Callbacks
@@ -60,7 +60,7 @@ fun main() {
     destroy()
 }
 
-fun renderButton(){
+fun renderButton() {
     button.update((deltaTime * 1000L).toLong())
     buttonShader.use()
     val model = Matrix4f().apply {
@@ -70,16 +70,14 @@ fun renderButton(){
     buttonShader.setMatrix4f("u_ModelMat", model)
 
     val color = button.getFinalColor()
-    buttonShader.setVec3("u_Color",
-        color.redFloat(),
-        color.greenFloat(),
-        color.blueFloat()
+    buttonShader.setVec3(
+        "u_Color", color.redFloat(), color.greenFloat(), color.blueFloat()
     )
     buttonRender.render()
     glUseProgram(0)
 }
 
-fun genShader(vert: String, frag: String): Shader{
+fun genShader(vert: String, frag: String): Shader {
     val classLoader = Thread.currentThread().contextClassLoader
 
     val vertStream = classLoader.getResourceAsStream("assets/shaders/$vert")
@@ -91,7 +89,7 @@ fun genShader(vert: String, frag: String): Shader{
     return Shader(vertStream, fragStream)
 }
 
-fun initImGui(){
+fun initImGui() {
     ImGui.createContext()
     val io = ImGui.getIO()
     io.iniFilename = null
@@ -104,13 +102,13 @@ fun initImGui(){
     }
 }
 
-fun initRender(){
+fun initRender() {
     buttonRender.init()
 }
 
 fun initWindow() {
     GLFWErrorCallback.createPrint(System.err).set()
-    if (!glfwInit()) throw IllegalStateException ("Unable to initialize GLFW")
+    if (!glfwInit()) throw IllegalStateException("Unable to initialize GLFW")
     glfwDefaultWindowHints()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3)
@@ -123,7 +121,7 @@ fun initWindow() {
     glfwMakeContextCurrent(window)
 }
 
-fun destroy(){
+fun destroy() {
     imGuiImplGlfw.shutdown()
     imGuiImplGl3.shutdown()
     ImGui.destroyContext()
@@ -146,17 +144,42 @@ private val interpolators = listOf(
     "SmoothStep" to Interpolators.SmoothStep,
 )
 
-fun renderDebugGui(){
+fun renderDebugGui() {
     imGuiImplGlfw.newFrame()
     imGuiImplGl3.newFrame()
     ImGui.newFrame()
     ImGui.begin("Debug")
 
     ImGui.separatorText("Info")
-    ImGui.text("button props: ${button.currentProps}")
+    ImGui.alignTextToFramePadding()
+    ImGui.text("button props:")
+    ImGui.sameLine()
+    ImGui.colorButton(
+        "##currentColor",
+        button.currentProps.color.redFloat(),
+        button.currentProps.color.greenFloat(),
+        button.currentProps.color.blueFloat(),
+        button.currentProps.color.alphaFloat()
+    )
+    ImGui.sameLine()
+    ImGui.text("size=%.2f, angle=%.2f°".format(button.currentProps.size, button.currentProps.angle))
+
     ImGui.text("playing effects: ${button.effectAnimations.size}")
-    ImGui.text("overlay colors: ${button.overlayColors.values
-        .takeUnless { it.isEmpty() }?.joinToString { "[${it.toIntValueString()}]" } ?: "empty"}")
+    ImGui.alignTextToFramePadding()
+    ImGui.text("overlay colors:")
+    button.overlayColors.values.takeUnless { it.isEmpty() }?.forEachIndexed { i, color ->
+        ImGui.sameLine()
+        ImGui.colorButton(
+            "##overlayColor#$i",
+            color.redFloat(),
+            color.greenFloat(),
+            color.blueFloat(),
+            color.alphaFloat()
+        )
+    } ?: run {
+        ImGui.sameLine()
+        ImGui.text("empty")
+    }
 
     ImGui.newLine()
     ImGui.separatorText("Action")
@@ -178,10 +201,7 @@ fun renderDebugGui(){
     ImGui.sameLine()
     val interpolatorNames = interpolators.map { it.first }.toTypedArray()
     ImGui.combo(
-        "##interpolator",
-        selectedInterpolator,
-        interpolatorNames,
-        interpolatorNames.size
+        "##interpolator", selectedInterpolator, interpolatorNames, interpolatorNames.size
     ).onTrue {
         button.hoverAnimation.interpolator = interpolators[selectedInterpolator.get()].second
     }
