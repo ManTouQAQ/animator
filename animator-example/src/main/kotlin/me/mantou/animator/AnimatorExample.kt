@@ -60,11 +60,17 @@ fun renderButton(){
     button.update((deltaTime * 1000L).toLong())
     buttonShader.use()
     val model = Matrix4f().apply {
-        rotate(Math.toRadians(button.angle), 0f, 0f, 1f)
-        scale(button.size, button.size, 1f)
+        rotate(Math.toRadians(button.currentProps.angle), 0f, 0f, 1f)
+        scale(button.currentProps.size, button.currentProps.size, 1f)
     }
     buttonShader.setMatrix4f("u_ModelMat", model)
-    buttonShader.setVec3("u_Color", button.color.red / 255f, button.color.green / 255f, button.color.blue / 255f)
+
+    val color = button.getFinalColor()
+    buttonShader.setVec3("u_Color",
+        color.red / 255f,
+        color.green / 255f,
+        color.blue / 255f
+    )
     buttonRender.render()
     glUseProgram(0)
 }
@@ -142,7 +148,9 @@ fun renderDebugGui(){
     ImGui.newFrame()
     ImGui.begin("Debug")
 
+    ImGui.text("button props: ${button.currentProps}")
     ImGui.text("playing effects: ${button.effectAnimations.size}")
+    ImGui.text("overlay colors: ${button.overlayColors.values}")
 
     ImGui.button(if (button.isHovering) "unhover" else "hover").onTrue {
         button.isHovering = !button.isHovering

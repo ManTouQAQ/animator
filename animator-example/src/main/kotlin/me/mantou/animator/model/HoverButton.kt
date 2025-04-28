@@ -4,15 +4,20 @@ import me.mantou.animator.Animation
 import me.mantou.animator.util.AnimationUtils
 import java.awt.Color
 
-class HoverButton {
-    var defaultAngle = 0f
-    var defaultSize = 0.5f
-    var defaultColor = Color(1f, 1f, 1f, 1f)
-    var hoverColor = Color(0f, 1f, 1f, 1f)
+data class ButtonProps(
+    var size: Float = 0.5f,
+    var angle: Float = 0f,
+    var color: Color = Color(1f, 1f, 1f, 1f)
+) {
+    override fun toString(): String {
+        return "size=$size, angle=$angle, color=[${color.red}, ${color.green}, ${color.blue}]"
+    }
+}
 
-    var size = defaultSize
-    var angle = defaultAngle
-    var color: Color = defaultColor
+class HoverButton {
+    val currentProps = ButtonProps()
+    val baseProps = ButtonProps()
+    val hoverProps = ButtonProps(0.6f, 180f, Color(0f, 1f, 1f, 1f))
 
     var isHovering = false
     var rainbow = false
@@ -26,13 +31,21 @@ class HoverButton {
     val hoverAnimation = Animation(
         1000L,
         { p ->
-            size = defaultSize + (p / 4)
-            color = AnimationUtils.lerpColor(
-                defaultColor,
-                hoverColor,
+            currentProps.size = AnimationUtils.lerp(
+                baseProps.size,
+                hoverProps.size,
                 p
             )
-            angle = AnimationUtils.lerp(defaultAngle, 180f, p)
+            currentProps.color = AnimationUtils.lerpColor(
+                baseProps.color,
+                hoverProps.color,
+                p
+            )
+            currentProps.angle = AnimationUtils.lerp(
+                baseProps.angle,
+                hoverProps.angle,
+                p
+            )
             println("Progress: $p")
         },
         onEnd = {
@@ -41,36 +54,53 @@ class HoverButton {
     )
 
     val effectAnimations = mutableListOf<Animation>()
+    val overlayColors = mutableMapOf<Animation, Color>()
 
     fun update(deltaMillis: Long) {
         hoverAnimation.update(deltaMillis * if (isHovering) -1 else 1)
+
+        if (rainbow) {
+            currentProps.color = AnimationUtils.hsvColorCyclic(0.05f)
+        }
 
         effectAnimations.removeIf {
             it.update(deltaMillis)
             it.isEnd()
         }
+    }
 
-        if (rainbow) {
-            color = AnimationUtils.hsvColorCyclic(0.05f)
+    fun getFinalColor(): Color {
+        var finalColor = currentProps.color
+        for (overlayColor in overlayColors.values) {
+            finalColor = finalColor.multiply(overlayColor)
         }
+        return finalColor
     }
 
     fun click(){
-        val darkenColor = Color(
-            (color.red / 255f * 0.7f).coerceIn(0f, 1f),
-            (color.green / 255f * 0.7f).coerceIn(0f, 1f),
-            (color.blue / 255f * 0.7f).coerceIn(0f, 1f),
-            color.alpha / 255f
-        )
-
         effectAnimations.add(Animation(
-            150L,
+            200L,
             { p ->
-                hoverAnimation.updateForce()
-                color = AnimationUtils.lerpColor(color, darkenColor, p)
+                overlayColors[this] = AnimationUtils.lerpColor(
+                    Color(1f, 1f, 1f, 1f),
+                    Color(0.7f, 0.7f, 0.7f, 1f),
+                    p
+                )
+            },
+            onEnd = {
+                overlayColors.remove(this)
             },
             repeatMode = Animation.RepeatMode.REVERSE,
             repeatCount = 1
         ))
     }
+}
+
+fun Color.multiply(other: Color): Color {
+    return Color(
+        this.red / 255f * other.red / 255f,
+        this.green / 255f * other.green / 255f,
+        this.blue / 255f * other.blue / 255f,
+        this.alpha / 255f * other.alpha / 255f
+    )
 }

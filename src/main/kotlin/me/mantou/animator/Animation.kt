@@ -2,9 +2,9 @@ package me.mantou.animator
 
 class Animation(
     val durationTime: Long,
-    private val onUpdate: (progress: Float) -> Unit,
+    private val onUpdate: Animation.(progress: Float) -> Unit,
     var interpolator: Interpolator = Interpolator { t -> t },
-    private val onEnd: (() -> Unit)? = null,
+    private val onEnd: (Animation.() -> Unit)? = null,
     var repeatMode: RepeatMode = RepeatMode.RESTART,
     private val repeatCount: Int = 0
 ) {
@@ -69,7 +69,7 @@ class Animation(
 
     private fun endAnimation() {
         updateEndProgress()
-        onEnd?.invoke()
+        onEnd?.invoke(this)
     }
 
     private fun updateEndProgress() {
