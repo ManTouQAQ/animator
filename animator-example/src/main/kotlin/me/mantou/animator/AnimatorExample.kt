@@ -152,10 +152,14 @@ fun renderDebugGui(){
     ImGui.newFrame()
     ImGui.begin("Debug")
 
+    ImGui.separatorText("Info")
     ImGui.text("button props: ${button.currentProps}")
     ImGui.text("playing effects: ${button.effectAnimations.size}")
-    ImGui.text("overlay colors: ${button.overlayColors.values.joinToString { "[${it.toIntValueString()}]" }}")
+    ImGui.text("overlay colors: ${button.overlayColors.values
+        .takeUnless { it.isEmpty() }?.joinToString { "[${it.toIntValueString()}]" } ?: "empty"}")
 
+    ImGui.newLine()
+    ImGui.separatorText("Action")
     ImGui.button(if (button.isHovering) "unhover" else "hover").onTrue {
         button.isHovering = !button.isHovering
     }
@@ -164,13 +168,17 @@ fun renderDebugGui(){
         button.click()
     }
 
-    ImGui.checkbox("Rainbow", button.rainbow).onTrue {
+    ImGui.newLine()
+    ImGui.separatorText("Settings")
+    ImGui.checkbox("rainbow", button.rainbow).onTrue {
         button.rainbow = !button.rainbow
     }
-
+    ImGui.alignTextToFramePadding()
+    ImGui.text("interpolator")
+    ImGui.sameLine()
     val interpolatorNames = interpolators.map { it.first }.toTypedArray()
     ImGui.combo(
-        "Interpolator",
+        "##interpolator",
         selectedInterpolator,
         interpolatorNames,
         interpolatorNames.size
