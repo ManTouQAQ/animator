@@ -8,6 +8,10 @@ import me.mantou.animator.model.HoverButton
 import me.mantou.animator.render.ButtonRender
 import me.mantou.animator.shader.Shader
 import me.mantou.animator.util.Interpolators
+import me.mantou.animator.util.blueFloat
+import me.mantou.animator.util.greenFloat
+import me.mantou.animator.util.redFloat
+import me.mantou.animator.util.toIntValueString
 import org.joml.Math
 import org.joml.Matrix4f
 import org.lwjgl.glfw.Callbacks
@@ -67,9 +71,9 @@ fun renderButton(){
 
     val color = button.getFinalColor()
     buttonShader.setVec3("u_Color",
-        color.red / 255f,
-        color.green / 255f,
-        color.blue / 255f
+        color.redFloat(),
+        color.greenFloat(),
+        color.blueFloat()
     )
     buttonRender.render()
     glUseProgram(0)
@@ -150,7 +154,7 @@ fun renderDebugGui(){
 
     ImGui.text("button props: ${button.currentProps}")
     ImGui.text("playing effects: ${button.effectAnimations.size}")
-    ImGui.text("overlay colors: ${button.overlayColors.values}")
+    ImGui.text("overlay colors: ${button.overlayColors.values.joinToString { "[${it.toIntValueString()}]" }}")
 
     ImGui.button(if (button.isHovering) "unhover" else "hover").onTrue {
         button.isHovering = !button.isHovering

@@ -2,6 +2,8 @@ package me.mantou.animator.model
 
 import me.mantou.animator.Animation
 import me.mantou.animator.util.AnimationUtils
+import me.mantou.animator.util.multiply
+import me.mantou.animator.util.toIntValueString
 import java.awt.Color
 
 data class ButtonProps(
@@ -10,7 +12,7 @@ data class ButtonProps(
     var color: Color = Color(1f, 1f, 1f, 1f)
 ) {
     override fun toString(): String {
-        return "size=$size, angle=$angle, color=[${color.red}, ${color.green}, ${color.blue}]"
+        return "size=$size, angle=$angle, color=[${color.toIntValueString()}]"
     }
 }
 
@@ -94,13 +96,4 @@ class HoverButton {
             repeatCount = 1
         ))
     }
-}
-
-fun Color.multiply(other: Color): Color {
-    return Color(
-        this.red / 255f * other.red / 255f,
-        this.green / 255f * other.green / 255f,
-        this.blue / 255f * other.blue / 255f,
-        this.alpha / 255f * other.alpha / 255f
-    )
 }
