@@ -64,13 +64,14 @@ fun main() {
 fun renderButton() {
     button.update((deltaTime * 1000L).toLong())
     buttonShader.use()
+    val buttonProps = button.getModifiedProps()
     val model = Matrix4f().apply {
-        rotate(Math.toRadians(button.currentProps.angle), 0f, 0f, 1f)
-        scale(button.currentProps.size, button.currentProps.size, 1f)
+        rotate(Math.toRadians(buttonProps.angle), 0f, 0f, 1f)
+        scale(buttonProps.size, buttonProps.size, 1f)
     }
     buttonShader.setMatrix4f("u_ModelMat", model)
 
-    val color = button.getFinalColor()
+    val color = buttonProps.color
     buttonShader.setVec3(
         "u_Color", color.redFloat(), color.greenFloat(), color.blueFloat()
     )
@@ -153,24 +154,25 @@ fun renderDebugGui() {
 
     ImGui.separatorText("Info")
     ImGui.alignTextToFramePadding()
-    ImGui.text("button props:")
+    ImGui.text("button raw props:")
     ImGui.sameLine()
+    val buttonProps = button.getRawProps()
+    val color = buttonProps.color
     ImGui.colorButton(
-        "##currentColor",
-        button.currentProps.color.redFloat(),
-        button.currentProps.color.greenFloat(),
-        button.currentProps.color.blueFloat(),
-        button.currentProps.color.alphaFloat()
+        "##currentColor", color.redFloat(), color.greenFloat(), color.blueFloat(), color.alphaFloat()
     )
     ImGui.sameLine()
-    ImGui.text("size=%.2f, angle=%.2f°  ".format(button.currentProps.size, button.currentProps.angle))
+    ImGui.text("size=%.2f, angle=%.2f°  ".format(buttonProps.size, buttonProps.angle))
 
     ImGui.alignTextToFramePadding()
     ImGui.text("playing effects: ${button.effectAnimations.size}")
 
     ImGui.alignTextToFramePadding()
-    ImGui.text("overlay colors: ${button.overlayColors.values
-        .takeUnless { it.isEmpty() }?.joinToString { "[${it.toIntValueString()}]" } ?: "empty"}")
+    ImGui.text(
+        "overlay colors: ${
+        button.statesModifies.values.mapNotNull { it.color }.takeUnless { it.isEmpty() }
+            ?.joinToString { "[${it.toIntValueString()}]" } ?: "empty"
+    }")
 
 //    ImGui.text("overlay colors:")
 //    button.overlayColors.values.takeUnless { it.isEmpty() }?.forEachIndexed { i, color ->
